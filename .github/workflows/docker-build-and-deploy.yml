@@ -21,6 +21,7 @@ jobs:
         continue-on-error: true
         with:
           key: ${{ github.event.repository.name }}-{hash}
+          restore-keys: ${{ github.event.repository.name }}
 
       - name: Create image ref
         run: |
