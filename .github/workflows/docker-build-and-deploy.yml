@@ -11,7 +11,7 @@ on:
         type: string
 
 jobs:
-  build:
+  docker-build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
