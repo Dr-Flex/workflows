@@ -1,0 +1,46 @@
+name: Docker build and push
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        required: true
+        type: string
+      deployment-file:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+
+      - name: Create image ref
+        run: |
+          export IMAGE_TAG="$(date +'%Y-%m-%d_%H-%M-%S')_${{ github.ref_name }}_${{ github.sha }}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Build the Docker image
+        run: docker build . -t ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ inputs.image-name }}:$IMAGE_TAG
+
+      - name: Login to Dr-Flex container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY_URL }}
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Push the Docker image
+        run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ inputs.image-name }}:$IMAGE_TAG
+
+      - name: Restart deployment
+        run: >
+            curl --fail --silent -X POST -H "Authorization: ${{ secrets.AUTODEPLOY_TOKEN }}"
+            --data-urlencode deploymentFile=${{ inputs.deployment-file }}
+            --data-urlencode newImageRef=${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ inputs.image-name }}:$IMAGE_TAG
+            ${{ secrets.AUTODEPLOY_URL  }}
