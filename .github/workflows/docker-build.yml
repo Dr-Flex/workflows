@@ -1,0 +1,28 @@
+name: Docker build and push
+
+on:
+  workflow_call:
+    inputs:
+      deployment-file:
+        required: true
+        type: string
+
+jobs:
+  docker-build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+        with:
+          key: ${{ github.event.repository.name }}-{hash}
+          restore-keys: ${{ github.event.repository.name }}
+
+      - name: Create image ref
+        run: |
+          export IMAGE_TAG="$(date +'%Y-%m-%d_%H-%M-%S')_${{ github.ref_name }}_${{ github.sha }}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+      - name: Build the Docker image
+        run: docker build . -t ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
