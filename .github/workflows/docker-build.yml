@@ -1,10 +1,10 @@
-name: Docker build and push
+name: Docker build
 
 on:
   workflow_call:
 
 jobs:
-  docker-build-and-deploy:
+  docker-build:
     runs-on: ubuntu-latest
 
     steps:
