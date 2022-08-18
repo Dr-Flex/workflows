@@ -3,9 +3,6 @@ name: Docker build and push
 on:
   workflow_call:
     inputs:
-      image-name:
-        required: true
-        type: string
       deployment-file:
         required: true
         type: string
@@ -45,5 +42,5 @@ jobs:
         run: >
             curl --fail --silent -X POST -H "Authorization: ${{ secrets.AUTODEPLOY_TOKEN }}"
             --data-urlencode deploymentFile=${{ inputs.deployment-file }}
-            --data-urlencode newImageRef=${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ inputs.image-name }}:$IMAGE_TAG
+            --data-urlencode newImageRef=${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
             ${{ secrets.AUTODEPLOY_URL  }}
