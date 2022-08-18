@@ -2,10 +2,6 @@ name: Docker build and push
 
 on:
   workflow_call:
-    inputs:
-      deployment-file:
-        required: true
-        type: string
 
 jobs:
   docker-build-and-deploy:
