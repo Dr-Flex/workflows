@@ -40,7 +40,7 @@ jobs:
 
       - name: Restart deployment
         run: >
-            curl --fail -v -X POST -H "Authorization: ${{ secrets.AUTODEPLOY_TOKEN }}"
-            --data-urlencode deploymentFile=${{ inputs.deployment-file }}
-            --data-urlencode newImageRef=${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
+            wget --no-verbose --content-on-error=on --output-document -
+            --header "Authorization: ${{ secrets.AUTODEPLOY_TOKEN }}"
+            --post-data "deploymentFile=${{ inputs.deployment-file }}&newImageRef=${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG"
             ${{ secrets.AUTODEPLOY_URL  }}
