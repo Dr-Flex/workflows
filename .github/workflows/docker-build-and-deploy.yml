@@ -27,6 +27,10 @@ jobs:
 
       - name: Build the Docker image
         run: docker build . -t ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
+        
+      - name: Run integration tests
+        if: "${{ inputs.integration-test-folder != '' }}"
+        run: cd "${{ inputs.integration-test-folder}}" && docker compose up --build --exit-code-from test-runner
 
       - name: Login to Dr-Flex container registry
         uses: docker/login-action@v2
