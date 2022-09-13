@@ -6,6 +6,11 @@ on:
       deployment-file:
         required: true
         type: string
+      integration-test-folder:
+        description: "docker compose file for integration tests"
+        required: false
+        type: string
+        
 
 jobs:
   docker-build-and-deploy:
@@ -24,7 +29,7 @@ jobs:
         
       - name: Run integration tests
         if: "${{ inputs.integration-test-folder != '' }}"
-        run: cd "${{ inputs.integration-test-folder}}" && docker compose up --build --exit-code-from test-runner
+        run: cd "${{ inputs.integration-test-folder}}" && docker compose up --build --exit-code-from test-runner && docker compose down
 
       - name: Login to Dr-Flex container registry
         uses: docker/login-action@v2
