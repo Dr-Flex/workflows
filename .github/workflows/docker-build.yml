@@ -26,3 +26,9 @@ jobs:
       - name: Run integration tests
         if: "${{ inputs.integration-test-folder != '' }}"
         run: cd "${{ inputs.integration-test-folder}}" && docker compose up --build --exit-code-from test-runner && docker compose down
+        
+      - name: Cleanup integration tests
+        if: "${{ inputs.integration-test-folder != '' }}"
+        uses: webiny/action-post-run@2.0.1
+        with:
+          run: docker compose down
