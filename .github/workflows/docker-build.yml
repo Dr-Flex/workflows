@@ -25,8 +25,4 @@ jobs:
         
       - name: Run integration tests
         if: "${{ inputs.integration-test-folder != '' }}"
-        run: cd "${{ inputs.integration-test-folder}}" && docker compose up --build --exit-code-from test-runner
-        
-      - name: Cleanup integration tests
-        if: "${{ inputs.integration-test-folder != '' }}"
-        run: cd "${{ inputs.integration-test-folder}}" && docker compose down
+        run: cd "${{ inputs.integration-test-folder}}" && docker compose up --force-recreate -V --build --exit-code-from test-runner
