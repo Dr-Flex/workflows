@@ -23,6 +23,8 @@ jobs:
         run: |
           export IMAGE_TAG="$(date +'%Y-%m-%d_%H-%M-%S')_${{ github.ref_name }}_${{ github.sha }}"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          export IMAGE_LATEST_TAG="${{ github.ref_name }}-latest"
+          echo "IMAGE_LATEST_TAG=$IMAGE_LATEST_TAG" >> $GITHUB_ENV
 
       - name: Build the Docker image
         run: docker build . -t ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
@@ -38,8 +40,14 @@ jobs:
           username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
           password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
+      - name: Tag with latest-Tag
+        run: docker tag ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_LATEST_TAG
+
       - name: Push the Docker image
         run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
+
+      - name: Push the Docker image with latest tag
+        run: docker push ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_LATEST_TAG
 
       - name: Restart deployment
         run: >
