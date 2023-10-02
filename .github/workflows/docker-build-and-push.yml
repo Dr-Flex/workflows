@@ -3,9 +3,6 @@ name: Docker build and push
 on:
   workflow_call:
     inputs:
-      deployment-file:
-        required: true
-        type: string
       integration-test-folder:
         description: "docker compose folder for integration tests"
         required: false
