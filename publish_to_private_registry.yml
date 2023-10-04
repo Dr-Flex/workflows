@@ -1,0 +1,58 @@
+name: Publish to Private Registry
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v2
+
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+
+    - name: Build and Package the crate
+      run: |
+        cargo package --allow-dirty
+        echo "CRATE_PATH=$(pwd)/target/package/$(ls target/package | grep .crate)" >> $GITHUB_ENV
+
+    - name: Checkout the private registry repository
+      uses: actions/checkout@v2
+      with:
+        repository: <your_github_username>/private-crates
+        path: private-crates
+        token: ${{ secrets.PRIVATE_REPO_ACCESS_TOKEN }}
+
+    - name: Update the private registry
+      run: |
+        cp $CRATE_PATH private-crates/crates/
+        CRATE_NAME=$(basename $CRATE_PATH .crate)
+        FIRST_TWO_CHARS=${CRATE_NAME:0:2}
+        mkdir -p private-crates/index/$FIRST_TWO_CHARS/$CRATE_NAME
+        echo '{
+          "name": "'$CRATE_NAME'",
+          "vers": "$(cargo pkgid | cut -d# -f2 | cut -d: -f2)",
+          "deps": [],
+          "cksum": "$(sha256sum $CRATE_PATH | cut -d ' ' -f1)",
+          "features": {},
+          "yanked": false,
+          "links": null
+        }' > private-crates/index/$FIRST_TWO_CHARS/$CRATE_NAME/$(cargo pkgid | cut -d# -f2 | cut -d: -f2).json
+
+    - name: Commit and push the updates
+      run: |
+        cd private-crates
+        git config user.name "GitHub Actions Bot"
+        git config user.email "actions@github.com"
+        git add .
+        git commit -m "Add $CRATE_NAME version $(cargo pkgid | cut -d# -f2 | cut -d: -f2)"
+        git push
