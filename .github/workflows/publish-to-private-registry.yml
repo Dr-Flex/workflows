@@ -1,0 +1,34 @@
+name: Publish to Private Registry
+
+on:
+  workflow_call:
+    inputs:
+      packages-to-publish:
+        description: "List of packages to publish, separated by comma"
+        required: true
+        type: string
+        default: "."
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      BASE_GITHUB_URL: https://github.com/Dr-Flex/
+    
+    steps:
+    - name: Login to Dr-Flex container registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ secrets.DOCKER_REGISTRY_URL }}
+        username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+        password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+      
+    - name: Run the Crates Registry Tools
+      run: |
+        set -e
+        docker run ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/crates-registry-tools:main-latest publish-crate \
+        -i ${BASE_GITHUB_URL}private-crates.git \
+        -r ${BASE_GITHUB_URL}${{ github.event.repository.name }}.git \
+        -u https://dr-flex.de/crates/ \
+        -t ${{ secrets.PRIVATE_CRATES_REPO_ACCESS_TOKEN }} \
+        -p ${{ inputs.packages-to-publish }}
