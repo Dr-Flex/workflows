@@ -11,7 +11,7 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       BASE_GITHUB_URL: https://github.com/Dr-Flex/
     
