@@ -31,4 +31,5 @@ jobs:
         -r ${BASE_GITHUB_URL}${{ github.event.repository.name }}.git \
         -u https://dr-flex.de/crates/ \
         -t ${{ secrets.PRIVATE_CRATES_REPO_ACCESS_TOKEN }} \
-        -p ${{ inputs.packages-to-publish }}
+        -p ${{ inputs.packages-to-publish }} \
+        -b ${{ github.ref_name }}
