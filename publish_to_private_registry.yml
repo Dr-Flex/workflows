@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Check out the code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Rust
       uses: actions-rs/toolchain@v1
@@ -26,7 +26,7 @@ jobs:
         echo "CRATE_PATH=$(pwd)/target/package/$(ls target/package | grep .crate)" >> $GITHUB_ENV
 
     - name: Checkout the private registry repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: <your_github_username>/private-crates
         path: private-crates
