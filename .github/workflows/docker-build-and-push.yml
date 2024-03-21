@@ -24,7 +24,7 @@ jobs:
           echo "IMAGE_LATEST_TAG=$IMAGE_LATEST_TAG" >> $GITHUB_ENV
 
       - name: Build the Docker image
-        run: docker build --build-arg="IMAGE_TAG=$IMAGE_TAG=" . -t ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
+        run: docker build --build-arg="IMAGE_TAG=$IMAGE_TAG" . -t ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
         
       - name: Run integration tests
         if: "${{ inputs.integration-test-folder != '' }}"
