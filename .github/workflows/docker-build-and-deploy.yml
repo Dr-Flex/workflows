@@ -26,8 +26,13 @@ jobs:
           export IMAGE_LATEST_TAG="${{ github.ref_name }}-latest"
           echo "IMAGE_LATEST_TAG=$IMAGE_LATEST_TAG" >> $GITHUB_ENV
 
+      - name: Create HEAD count
+        run: |
+          export HEAD_COUNT=$(git rev-list --count $(git rev-parse --abbrev-ref HEAD))
+          echo "HEAD_COUNT=$HEAD_COUNT" >> $GITHUB_ENV
+
       - name: Build the Docker image
-        run: docker build --build-arg="IMAGE_TAG=$IMAGE_TAG" . -t ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
+        run: docker build --build-arg="IMAGE_TAG=$IMAGE_TAG" --build-arg="HEAD_COUNT=$HEAD_COUNT" . -t ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
         
       - name: Run integration tests
         if: "${{ inputs.integration-test-folder != '' }}"
