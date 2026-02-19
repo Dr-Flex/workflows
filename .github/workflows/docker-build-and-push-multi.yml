@@ -1,0 +1,66 @@
+name: Docker multi-image build and push
+
+on:
+  workflow_call:
+    inputs:
+      images:
+        description: >
+          JSON array of images to build and push.
+          Each entry: {"name": "<registry-image-name>", "dockerfile": "<path-to-Dockerfile>", "context": "<build-context>"}
+          Example: [{"name":"my-api","dockerfile":"./api/Dockerfile","context":"./api"},{"name":"my-worker","dockerfile":"./worker/Dockerfile","context":"."}]
+        required: true
+        type: string
+      integration-test-folder:
+        description: "docker compose folder for integration tests (runs after all images are built, before push)"
+        required: false
+        type: string
+
+jobs:
+  docker-build-and-push:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create image tags
+        run: |
+          IMAGE_TAG="$(date +'%Y-%m-%d_%H-%M-%S')_${{ github.ref_name }}_${{ github.sha }}"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          IMAGE_LATEST_TAG="${{ github.ref_name }}-latest"
+          echo "IMAGE_LATEST_TAG=$IMAGE_LATEST_TAG" >> $GITHUB_ENV
+
+      - name: Build all Docker images
+        run: |
+          echo '${{ inputs.images }}' | jq -c '.[]' | while read -r image; do
+            name=$(echo "$image" | jq -r '.name')
+            dockerfile=$(echo "$image" | jq -r '.dockerfile')
+            context=$(echo "$image" | jq -r '.context')
+            full_tag="${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${name}:${IMAGE_TAG}"
+            echo "::group::Building ${name}"
+            docker build --build-arg="IMAGE_TAG=$IMAGE_TAG" -f "$dockerfile" -t "$full_tag" "$context"
+            echo "::endgroup::"
+          done
+
+      - name: Run integration tests
+        if: inputs.integration-test-folder != ''
+        run: cd "${{ inputs.integration-test-folder }}" && docker compose up --force-recreate -V --build --exit-code-from test-runner
+
+      - name: Login to Dr-Flex container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY_URL }}
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Tag and push all Docker images
+        run: |
+          echo '${{ inputs.images }}' | jq -c '.[]' | while read -r image; do
+            name=$(echo "$image" | jq -r '.name')
+            full_tag="${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${name}:${IMAGE_TAG}"
+            latest_tag="${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${name}:${IMAGE_LATEST_TAG}"
+            echo "::group::Pushing ${name}"
+            docker tag "$full_tag" "$latest_tag"
+            docker push "$full_tag"
+            docker push "$latest_tag"
+            echo "::endgroup::"
+          done
