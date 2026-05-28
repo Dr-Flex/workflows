@@ -46,13 +46,6 @@ jobs:
       - name: Run integration tests
         if: "${{ inputs.integration-test-folder != '' }}"
         run: cd "${{ inputs.integration-test-folder}}" && docker compose up --force-recreate -V --build --exit-code-from test-runner
-        
-      - name: Login to Dr-Flex container registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ secrets.DOCKER_REGISTRY_URL }}
-          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
-          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
       - name: Tag with latest-Tag
         run: docker tag ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_LATEST_TAG
