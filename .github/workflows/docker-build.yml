@@ -2,7 +2,17 @@ name: Docker build
 
 on:
   workflow_call:
-   inputs:
+    inputs:
+      build-context:
+        description: "Docker build context"
+        required: false
+        type: string
+        default: "."
+      dockerfile:
+        description: "Optional Dockerfile path. If empty, Docker uses the default Dockerfile in the build context."
+        required: false
+        type: string
+        default: ""
       integration-test-folder:
         description: "docker compose file for integration tests"
         required: false
@@ -21,7 +31,18 @@ jobs:
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
           
       - name: Build the Docker image
-        run: docker build --build-arg="IMAGE_TAG=$IMAGE_TAG" . -t ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
+        env:
+          BUILD_CONTEXT: ${{ inputs.build-context }}
+          DOCKERFILE: ${{ inputs.dockerfile }}
+        run: |
+          docker_args=(
+            --build-arg="IMAGE_TAG=$IMAGE_TAG"
+            -t "${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG"
+          )
+          if [ -n "$DOCKERFILE" ]; then
+            docker_args+=(-f "$DOCKERFILE")
+          fi
+          docker build "${docker_args[@]}" "$BUILD_CONTEXT"
         
       - name: Run integration tests
         if: "${{ inputs.integration-test-folder != '' }}"
