@@ -3,6 +3,16 @@ name: Docker build and push
 on:
   workflow_call:
     inputs:
+      build-context:
+        description: "Docker build context"
+        required: false
+        type: string
+        default: "."
+      dockerfile:
+        description: "Optional Dockerfile path. If empty, Docker uses the default Dockerfile in the build context."
+        required: false
+        type: string
+        default: ""
       deployment-file:
         required: true
         type: string
@@ -41,7 +51,19 @@ jobs:
            password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
 
       - name: Build the Docker image
-        run: docker build --build-arg="IMAGE_TAG=$IMAGE_TAG" --build-arg="RUN_NUMBER=$RUN_NUMBER" . -t ${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG
+        env:
+          BUILD_CONTEXT: ${{ inputs.build-context }}
+          DOCKERFILE: ${{ inputs.dockerfile }}
+        run: |
+          docker_args=(
+            --build-arg="IMAGE_TAG=$IMAGE_TAG"
+            --build-arg="RUN_NUMBER=$RUN_NUMBER"
+            -t "${{ secrets.DOCKER_REGISTRY_URL }}/dr-flex/${{ github.event.repository.name }}:$IMAGE_TAG"
+          )
+          if [ -n "$DOCKERFILE" ]; then
+            docker_args+=(-f "$DOCKERFILE")
+          fi
+          docker build "${docker_args[@]}" "$BUILD_CONTEXT"
         
       - name: Run integration tests
         if: "${{ inputs.integration-test-folder != '' }}"
