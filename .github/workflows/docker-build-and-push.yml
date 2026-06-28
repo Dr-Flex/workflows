@@ -17,12 +17,7 @@ on:
         description: "docker compose folder for integration tests"
         required: false
         type: string
-      build-args:
-        description: "Additional --build-arg values, one KEY=VALUE per line"
-        required: false
-        type: string
-        default: ""
-
+        
 
 jobs:
   docker-build-and-deploy:
@@ -49,7 +44,6 @@ jobs:
         env:
           BUILD_CONTEXT: ${{ inputs.build-context }}
           DOCKERFILE: ${{ inputs.dockerfile }}
-          EXTRA_BUILD_ARGS: ${{ inputs.build-args }}
         run: |
           docker_args=(
             --build-arg="IMAGE_TAG=$IMAGE_TAG"
@@ -58,9 +52,6 @@ jobs:
           if [ -n "$DOCKERFILE" ]; then
             docker_args+=(-f "$DOCKERFILE")
           fi
-          while IFS= read -r build_arg_line; do
-            [ -n "$build_arg_line" ] && docker_args+=(--build-arg="$build_arg_line")
-          done <<< "$EXTRA_BUILD_ARGS"
           docker build "${docker_args[@]}" "$BUILD_CONTEXT"
         
       - name: Run integration tests
