@@ -53,6 +53,14 @@ jobs:
           done <<< "$EXTRA_BUILD_ARGS"
           docker build "${docker_args[@]}" "$BUILD_CONTEXT"
         
+      - name: Login to Dr-Flex container registry
+        if: "${{ inputs.integration-test-folder != '' }}"
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY_URL }}
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+
       - name: Run integration tests
         if: "${{ inputs.integration-test-folder != '' }}"
         run: cd "${{ inputs.integration-test-folder}}" && docker compose up --force-recreate -V --build --exit-code-from test-runner
