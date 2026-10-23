@@ -26,6 +26,8 @@ on:
 jobs:
   docker-build:
     runs-on: self-hosted
+    env:
+      COMPOSE_PROJECT_NAME: docker-build-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - uses: actions/checkout@v4
@@ -63,4 +65,10 @@ jobs:
 
       - name: Run integration tests
         if: "${{ inputs.integration-test-folder != '' }}"
-        run: cd "${{ inputs.integration-test-folder}}" && docker compose up --force-recreate -V --build --exit-code-from test-runner
+        working-directory: ${{ inputs.integration-test-folder }}
+        run: docker compose up --force-recreate -V --build --exit-code-from test-runner
+
+      - name: Clean up integration tests
+        if: "${{ always() && inputs.integration-test-folder != '' }}"
+        working-directory: ${{ inputs.integration-test-folder }}
+        run: docker compose down --volumes --remove-orphans --rmi local
