@@ -32,10 +32,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Create image ref
+        env:
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          export IMAGE_TAG="$(date +'%Y-%m-%d_%H-%M-%S')_${{ github.ref_name }}_${{ github.sha }}"
+          BRANCH_TAG="$(printf '%s' "$REF_NAME" | LC_ALL=C tr -c 'a-zA-Z0-9_.-' '-')"
+          export IMAGE_TAG="$(date +'%Y-%m-%d_%H-%M-%S')_${BRANCH_TAG}_${{ github.sha }}"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-          export IMAGE_LATEST_TAG="${{ github.ref_name }}-latest"
+          export IMAGE_LATEST_TAG="${BRANCH_TAG}-latest"
           echo "IMAGE_LATEST_TAG=$IMAGE_LATEST_TAG" >> $GITHUB_ENV
 
       - name: Login to Dr-Flex container registry
